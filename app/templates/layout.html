@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Samba Manager</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Comprehensive web-based interface for managing Samba file sharing servers">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Samba Manager">
+  <meta name="mobile-web-app-capable" content="yes">
+  {% if request.host_url.find('github.dev') == -1 and request.host_url.find('app.github.dev') == -1 %}
+  <link rel="manifest" href="/static/manifest.json">
+  {% endif %}
+  <link rel="apple-touch-icon" href="/static/icon-192.svg">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +24,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Modern color palette */
+      /* Modern light color palette */
       --primary: #6366f1;      /* Indigo */
       --primary-light: #818cf8;
       --primary-dark: #4f46e5;
@@ -26,13 +39,13 @@
       --warning: #f59e0b;      /* Amber */
       --info: #3b82f6;         /* Blue */
       
-      --bg-dark: #0f172a;      /* Slate 900 */
-      --bg-card: #1e293b;      /* Slate 800 */
-      --bg-sidebar: #1e293b;   /* Slate 800 */
-      --text-primary: #f8fafc; /* Slate 50 */
-      --text-secondary: #cbd5e1; /* Slate 300 */
-      --text-muted: #94a3b8;   /* Slate 400 */
-      --border-color: #334155; /* Slate 700 */
+      --bg-dark: #ffffff;      /* White */
+      --bg-card: #f8fafc;      /* Light gray */
+      --bg-sidebar: #f1f5f9;   /* Light slate */
+      --text-primary: #1e293b; /* Dark slate */
+      --text-secondary: #475569; /* Medium slate */
+      --text-muted: #64748b;   /* Light slate */
+      --border-color: #e2e8f0; /* Light border */
     }
     
     body {
@@ -40,6 +53,9 @@
       background-color: var(--bg-dark);
       color: var(--text-primary);
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 4rem; /* Space for fixed footer */
     }
 
     .modal-title{
@@ -103,6 +119,8 @@
       text-decoration: none;
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      width: 100%;
     }
     
     .sidebar-brand i {
@@ -147,7 +165,9 @@
     .content {
       margin-left: 250px;
       padding: 1.5rem;
+      padding-bottom: 5rem; /* Space for fixed footer */
       transition: all 0.3s;
+      flex: 1;
     }
     
     .page-header {
@@ -187,13 +207,13 @@
     
     /* Forms */
     .form-control, .form-select {
-      background-color: #1a2234;
+      background-color: #ffffff;
       color: var(--text-primary);
       border-color: var(--border-color);
     }
     
     .form-control:focus, .form-select:focus {
-      background-color: #141b2d;
+      background-color: #ffffff;
       color: var(--text-primary);
       border-color: var(--primary);
       box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
@@ -211,52 +231,53 @@
     /* Tables */
     .table {
       color: var(--text-primary);
-      background-color: var(--bg-card); /* Dark background for tables */
+      background-color: var(--bg-card);
     }
     
     .table thead th {
-      background-color: #2d3748; /* Darker header background */
-      color: #e4e4e4; /* Brighter text for headers */
+      background-color: #e2e8f0;
+      color: var(--text-primary);
       font-weight: 600;
       border-bottom: 1px solid var(--border-color);
     }
     
     .table tbody td {
       border-color: var(--border-color);
-      color: #1f1e1e; /* Bright white text for maximum visibility */
+      color: var(--text-primary);
     }
     
     .table tbody tr {
-      background-color: #1e293b; /* Visible background for rows */
+      background-color: var(--bg-card);
     }
     
     .table tbody tr:nth-child(odd) {
-      background-color: #273344; /* Alternating row color for better visibility */
+      background-color: #f8fafc;
     }
     
     .table-hover tbody tr:hover {
-      background-color: rgba(99, 102, 241, 0.3); /* More visible hover effect */
-      color: #ffffff;
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--text-primary);
     }
     
     /* List Group Styles for groups.html */
     .list-group-item {
-      background-color: #1e293b; /* Match table row background */
-      color: #e4e4e4; /* Light text color for visibility */
+      background-color: var(--bg-card);
+      color: var(--text-primary);
       border-color: var(--border-color);
     }
     
     .list-group-item:nth-child(odd) {
-      background-color: #273344; /* Alternating color for better visibility */
+      background-color: #f8fafc;
+    }
     }
     
     .list-group-item:hover {
-      background-color: rgba(99, 102, 241, 0.3); /* Hover effect */
+      background-color: rgba(99, 102, 241, 0.1);
     }
     
     .card-header.bg-light {
-      background-color: #2d3748 !important; /* Match table header background */
-      color: #e4e4e4; /* Match table header text color */
+      background-color: #e2e8f0 !important;
+      color: var(--text-primary);
     }
     
     /* Buttons */
@@ -373,7 +394,7 @@
     
     /* Utilities */
     .text-muted {
-      color: #b0b8c4 !important; /* Lighter shade for better visibility */
+      color: var(--text-muted) !important;
     }
     
     .border-bottom {
@@ -410,22 +431,22 @@
     
     /* Small text */
     small, .small {
-      color: #b0b8c4 !important; /* Lighter shade for better visibility */
+      color: var(--text-muted) !important;
     }
     
     /* Paragraphs */
     p {
-      color: #d1d8e0 !important; /* Even lighter shade for better readability */
+      color: var(--text-secondary) !important;
     }
 
     p .mb-3 {
-      color: #d1d8e0 !important; /* Even lighter shade for better readability */
+      color: var(--text-secondary) !important;
       font-size: 0.85rem;
     }
     
     /* Make span elements visible */
     span:not(.badge) {
-      color: #d1d8e0 !important;
+      color: var(--text-secondary) !important;
     }
     
     /* Fix visibility for margin-bottom classes with text */
@@ -449,10 +470,22 @@
       font-weight: 600;
     }
     
+    /* Footer styling */
+    footer {
+      z-index: 1020;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+    }
+    
     /* Mobile responsive */
     @media (max-width: 768px) {
       .sidebar {
         margin-left: -250px;
+        z-index: 1040;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
       }
       
       .sidebar.active {
@@ -461,21 +494,106 @@
       
       .content {
         margin-left: 0;
+        padding-top: 4rem; /* Space for mobile toggle button */
+        padding-bottom: 5rem; /* Extra space for fixed footer on mobile */
       }
       
       .content.active {
         margin-left: 250px;
       }
+      
+      /* Mobile overlay when sidebar is active */
+      .content::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1030;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+      }
+      
+      .content.active::before {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      /* Footer adjustments for mobile - now fixed positioned */
+      footer {
+        padding: 1rem 0;
+        z-index: 1050; /* Higher than sidebar and overlay */
+        background-color: var(--bg-card);
+        border-top: 1px solid var(--border-color);
+      }
+      
+      footer .row {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+      }
+      
+      footer .col-md-6 {
+        margin-bottom: 0.5rem;
+      }
+      
+      footer .text-md-end {
+        text-align: center !important;
+      }
+      
+      /* Page header adjustments */
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .page-header h2 {
+        margin-bottom: 0;
+      }
+      
+      /* Card adjustments */
+      .card {
+        margin-bottom: 1rem;
+      }
+      
+      /* Table responsiveness */
+      .table-responsive {
+        font-size: 0.875rem;
+      }
+      
+      /* Button adjustments */
+      .btn-group {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .btn-group .btn {
+        margin-bottom: 0.25rem;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Mobile Sidebar Toggle -->
+  <button class="btn btn-primary sidebar-toggle d-md-none position-fixed" style="top: 1rem; left: 1rem; z-index: 1050;" type="button">
+    <i class="bi bi-list"></i>
+  </button>
+  
   <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-header">
       <a href="/" class="sidebar-brand">
-        <i class="bi bi-hdd-network"></i>
-        <span>Samba Manager</span>
+        <span>
+          <i class="bi bi-hdd-network"></i>
+          <span>Samba Manager</span>
+        </span>
+        <button class="btn btn-sm btn-outline-secondary d-md-none sidebar-close" type="button">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </a>
     </div>
     
@@ -538,7 +656,7 @@
         </li>
         
         <li class="nav-item">
-          <a href="#" onclick="window.open('http://' + window.location.hostname + ':8080', '_blank', 'width=800,height=600'); return false;" class="nav-link">
+          <a href="#" onclick="openTerminal(); return false;" class="nav-link">
             <i class="bi bi-terminal"></i>
             <span>Terminal</span>
           </a>
@@ -555,6 +673,13 @@
           <a href="/help" class="nav-link {{ 'active' if request.path == '/help' }}">
             <i class="bi bi-question-circle"></i>
             <span>Help</span>
+          </a>
+        </li>
+        
+        <li class="nav-item">
+          <a href="/mobile-install" class="nav-link {{ 'active' if request.path == '/mobile-install' }}">
+            <i class="bi bi-phone"></i>
+            <span>Mobile Install</span>
           </a>
         </li>
         
@@ -576,6 +701,7 @@
       </ul>
     </div>
     
+    {% if current_user.is_authenticated %}
     <div class="mt-auto p-3 border-top" style="border-color: var(--border-color);">
       <div class="dropdown">
         <a href="#" class="user-dropdown d-flex align-items-center" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -601,6 +727,7 @@
         </ul>
       </div>
     </div>
+    {% endif %}
   </nav>
   
   <!-- Content -->
@@ -619,18 +746,141 @@
     {% block content %}{% endblock %}
   </div>
   
+  <!-- Footer -->
+  <footer class="bg-light border-top py-3" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 1020;">
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <p class="mb-0 text-secondary small">
+            © 2024 Samba Manager. All rights reserved.
+          </p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="https://lyaritech.com" target="_blank" class="text-decoration-none">
+            <small class="text-secondary">Powered by LyariTech</small>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Mobile sidebar toggle
       const sidebarToggle = document.querySelector('.sidebar-toggle');
+      const sidebarClose = document.querySelector('.sidebar-close');
+      const sidebar = document.querySelector('.sidebar');
+      const content = document.querySelector('.content');
+      
+      function toggleSidebar() {
+        sidebar.classList.toggle('active');
+        content.classList.toggle('active');
+      }
+      
+      function closeSidebar() {
+        sidebar.classList.remove('active');
+        content.classList.remove('active');
+      }
+      
       if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-          document.querySelector('.sidebar').classList.toggle('active');
-          document.querySelector('.content').classList.toggle('active');
+        sidebarToggle.addEventListener('click', toggleSidebar);
+      }
+      
+      if (sidebarClose) {
+        sidebarClose.addEventListener('click', function(e) {
+          e.preventDefault();
+          closeSidebar();
+        });
+      }
+      
+      // Close sidebar when clicking on overlay
+      if (content) {
+        content.addEventListener('click', function(e) {
+          if (e.target === content && window.innerWidth <= 768) {
+            closeSidebar();
+          }
         });
       }
     });
+
+    function openTerminal() {
+      try {
+        // Check if we're in a GitHub Codespace environment
+        var hostname = window.location.hostname;
+        var isGitHubCodespace = hostname.includes('.app.github.dev');
+        
+        var terminalUrl;
+        if (isGitHubCodespace) {
+          // For GitHub Codespaces, replace the port in the hostname
+          // e.g., vigilant-zebra-5rxrv6v3vpq7-5000.app.github.dev -> vigilant-zebra-5rxrv6v3vpq7-8080.app.github.dev
+          var baseName = hostname.replace(/-\d+\.app\.github\.dev$/, '');
+          terminalUrl = 'https://' + baseName + '-8080.app.github.dev';
+        } else {
+          // For regular environments, use the same hostname with port 8080
+          terminalUrl = 'http://' + hostname + ':8080';
+        }
+        
+        window.open(terminalUrl, '_blank', 'width=800,height=600');
+      } catch (error) {
+        console.error('Error opening terminal:', error);
+        alert('Failed to open terminal. Please check if the terminal service is running.');
+      }
+    }
+  </script>
+
+  <!-- Service Worker Registration for PWA -->
+  <script>
+    // Only register service worker if not in problematic environments
+    function shouldRegisterServiceWorker() {
+      // Check if we're in GitHub Codespaces (has specific hostname pattern)
+      if (window.location.hostname.includes('github.dev') ||
+          window.location.hostname.includes('app.github.dev')) {
+        console.log('Service Worker: Skipping registration in GitHub Codespaces environment');
+        return false;
+      }
+
+      // Check if we're in an HTTPS environment (required for service workers)
+      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+        console.log('Service Worker: HTTPS required for service worker registration');
+        return false;
+      }
+
+      return true;
+    }
+
+    if ('serviceWorker' in navigator && shouldRegisterServiceWorker()) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/sw.js', { scope: '/' })
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+
+            // Handle service worker updates
+            registration.addEventListener('updatefound', function() {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // New version available
+                    console.log('New service worker version available');
+                    // Optionally show update prompt to user
+                  }
+                });
+              }
+            });
+          })
+          .catch(function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+
+      // Listen for messages from service worker
+      navigator.serviceWorker.addEventListener('message', function(event) {
+        console.log('Message from service worker:', event.data);
+      });
+    } else {
+      console.log('Service Worker: Registration skipped');
+    }
   </script>
 </body>
 </html>

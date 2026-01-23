@@ -112,7 +112,7 @@
               </a>
             </div>
             <div class="col-md-3">
-              <a href="#" onclick="window.open('http://' + window.location.hostname + ':8080', '_blank', 'width=800,height=600'); return false;" class="btn btn-dark w-100 d-flex align-items-center justify-content-center">
+              <a href="#" onclick="openTerminal(); return false;" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center">
                 <i class="bi bi-terminal me-2"></i>
                 Terminal
               </a>
@@ -201,6 +201,7 @@
             <h6 class="text-muted mb-2">Import Configuration</h6>
             <p class="small">Upload a previously exported configuration file</p>
             <form action="/import" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
               <div class="input-group">
                 <input type="file" name="file" class="form-control" required>
                 <button type="submit" class="btn btn-primary">

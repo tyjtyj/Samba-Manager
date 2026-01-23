@@ -84,6 +84,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="/edit-share" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="modal-body">
           <input type="hidden" name="original_name" value="{{ share.name }}">
           
@@ -197,6 +198,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
         <form action="/delete-share" method="post" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="name" value="{{ share.name }}">
           <button type="submit" class="btn btn-danger">Delete Share</button>
         </form>
@@ -228,6 +230,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="/add-share" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="modal-body">
           <div class="mb-3">
             <label for="name" class="form-label">Share Name</label>
@@ -236,7 +239,12 @@
           
           <div class="mb-3">
             <label for="path" class="form-label">Path</label>
-            <input type="text" class="form-control" id="path" name="path" required>
+            <div class="input-group">
+              <input type="text" class="form-control" id="path" name="path" required>
+              <button type="button" class="btn btn-outline-secondary" id="browsePathBtn" title="Browse directories">
+                <i class="bi bi-folder2-open"></i>
+              </button>
+            </div>
           </div>
           
           <div class="mb-3">
@@ -324,3 +332,275 @@
   </div>
 </div>
 {% endblock %}
+
+<!-- Directory Browser Modal -->
+<div class="modal fade" id="directoryBrowserModal" tabindex="-1" aria-labelledby="directoryBrowserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="directoryBrowserModalLabel">Select Directory</h5>
+        <button type="button" class="btn-close" id="closeDirectoryBrowserModal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="currentPath" class="form-label">Current Path:</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="currentPath" value="/" readonly>
+            <button type="button" class="btn btn-outline-secondary" id="goBtn">
+              <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+        <div id="directoryContents" class="border rounded p-3" style="height: 300px; overflow-y: auto;">
+          <div class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" id="cancelDirectoryBrowserModal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="selectDirectoryBtn">Select Directory</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  let currentPath = '/';
+  
+  // Directory browser functionality
+  let directoryBrowserModal = null;
+  const currentPathInput = document.getElementById('currentPath');
+  const directoryContents = document.getElementById('directoryContents');
+  const goBtn = document.getElementById('goBtn');
+  const cancelDirectoryBrowserModal = document.getElementById('cancelDirectoryBrowserModal');
+  const closeDirectoryBrowserModal = document.getElementById('closeDirectoryBrowserModal');
+  
+  console.log('Elements found:', {
+    currentPathInput: !!currentPathInput,
+    directoryContents: !!directoryContents,
+    goBtn: !!goBtn,
+    selectDirectoryBtn: !!selectDirectoryBtn,
+    browsePathBtn: !!browsePathBtn
+  });
+  
+  // Browse button handler
+  browsePathBtn.addEventListener('click', function() {
+    console.log('Browse button clicked');
+    
+    // Use jQuery-like modal show if available, otherwise fallback
+    const modalElement = document.getElementById('directoryBrowserModal');
+    console.log('Modal element found:', !!modalElement);
+    
+    if (!modalElement) {
+      console.error('Directory browser modal not found!');
+      alert('Directory browser modal not found. Please refresh the page.');
+      return;
+    }
+    
+    // Simple modal show using Bootstrap's data attributes approach
+    modalElement.classList.add('show');
+    modalElement.style.display = 'block';
+    modalElement.setAttribute('aria-hidden', 'false');
+    
+    // Add backdrop
+    let backdrop = document.querySelector('.modal-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop fade show';
+      document.body.appendChild(backdrop);
+    }
+    
+    // Prevent body scroll
+    document.body.classList.add('modal-open');
+    
+    // Load directory contents
+    loadDirectory(currentPath);
+    
+    console.log('Modal shown manually');
+  });
+  
+  // Load directory contents
+  function loadDirectory(path) {
+    directoryContents.innerHTML = `
+      <div class="text-center">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    `;
+    
+    fetch('/api/browse-directory?path=' + encodeURIComponent(path), {
+      credentials: 'same-origin'
+    })
+      .then(response => {
+        console.log('API Response status:', response.status);
+        if (!response.ok) {
+          throw new Error('HTTP error! status: ' + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('API Response data:', data);
+        if (data.success) {
+          displayDirectoryContents(data.contents, path);
+        } else {
+          directoryContents.innerHTML = `
+            <div class="alert alert-danger">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              Error loading directory: ${data.error}
+            </div>
+          `;
+        }
+      })
+      .catch(error => {
+        directoryContents.innerHTML = `
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Error loading directory: ${error.message}
+          </div>
+        `;
+      });
+  }
+  
+  // Directory click handler function
+  function handleDirectoryClick() {
+    const itemPath = this.getAttribute('data-path');
+    const itemType = this.getAttribute('data-type');
+    
+    if (itemType === 'directory') {
+      // Add loading state
+      this.innerHTML = '<i class="bi bi-hourglass me-2"></i><span>Loading...</span>';
+      this.disabled = true;
+      
+      currentPath = itemPath;
+      currentPathInput.value = currentPath;
+      loadDirectory(currentPath);
+    }
+  }
+  
+  // Display directory contents
+  function displayDirectoryContents(contents, path) {
+    if (!contents || contents.length === 0) {
+      directoryContents.innerHTML = '<p class="text-muted text-center">Directory is empty</p>';
+      return;
+    }
+    
+    let html = '<div class="list-group">';
+    
+    // Add parent directory if not root
+    if (path !== '/') {
+      html += `
+        <button type="button" class="list-group-item list-group-item-action d-flex align-items-center directory-item" data-path="${path.split('/').slice(0, -1).join('/') || '/'}">
+          <i class="bi bi-arrow-up me-2"></i>
+          <span>..</span>
+        </button>
+      `;
+    }
+    
+    contents.forEach(item => {
+      const icon = item.type === 'directory' ? 'bi-folder' : 'bi-file-earmark';
+      const itemPath = path === '/' ? `/${item.name}` : `${path}/${item.name}`;
+      const isClickable = item.type === 'directory' ? 'directory-item' : '';
+      
+      html += `
+        <button type="button" class="list-group-item list-group-item-action d-flex align-items-center ${isClickable} ${item.type === 'directory' ? '' : 'text-muted'}" 
+                data-path="${itemPath}" data-type="${item.type}" ${item.type !== 'directory' ? 'disabled' : ''}>
+          <i class="bi ${icon} me-2"></i>
+          <span>${item.name}</span>
+          ${item.type === 'directory' ? '<small class="text-muted ms-auto">directory</small>' : '<small class="text-muted ms-auto">file</small>'}
+        </button>
+      `;
+    });
+    
+    html += '</div>';
+    directoryContents.innerHTML = html;
+    
+    // Remove existing event handlers to prevent duplicates
+    document.querySelectorAll('.directory-item').forEach(item => {
+      item.removeEventListener('click', handleDirectoryClick);
+    });
+    
+    // Add click handlers only to directories
+    document.querySelectorAll('.directory-item').forEach(item => {
+      item.addEventListener('click', handleDirectoryClick);
+    });
+  }
+  
+  // Go button handler
+  goBtn.addEventListener('click', function() {
+    const newPath = currentPathInput.value.trim();
+    if (newPath) {
+      currentPath = newPath;
+      loadDirectory(currentPath);
+    }
+  });
+  
+  // Enter key handler for path input
+  currentPathInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      goBtn.click();
+    }
+  });
+  
+  // Select directory button handler
+  selectDirectoryBtn.addEventListener('click', function() {
+    const pathInput = document.getElementById('path');
+    pathInput.value = currentPath;
+    
+    // Hide modal manually
+    hideDirectoryBrowserModal();
+    
+    // Show Add Share modal again
+    const addShareModal = new bootstrap.Modal(document.getElementById('addShareModal'));
+    addShareModal.show();
+  });
+  
+  // Cancel button handler
+  cancelDirectoryBrowserModal.addEventListener('click', function() {
+    hideDirectoryBrowserModal();
+    // Show Add Share modal again
+    const addShareModal = new bootstrap.Modal(document.getElementById('addShareModal'));
+    addShareModal.show();
+  });
+  
+  // Close button handler
+  closeDirectoryBrowserModal.addEventListener('click', function() {
+    hideDirectoryBrowserModal();
+    // Show Add Share modal again
+    const addShareModal = new bootstrap.Modal(document.getElementById('addShareModal'));
+    addShareModal.show();
+  });
+  
+  // Function to hide directory browser modal
+  function hideDirectoryBrowserModal() {
+    const modalElement = document.getElementById('directoryBrowserModal');
+    modalElement.classList.remove('show');
+    modalElement.style.display = 'none';
+    modalElement.setAttribute('aria-hidden', 'true');
+    
+    // Remove backdrop
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+      backdrop.remove();
+    }
+    
+    // Restore body scroll
+    document.body.classList.remove('modal-open');
+  }
+  
+  // Show modal handler
+  document.getElementById('directoryBrowserModal').addEventListener('show.bs.modal', function() {
+    loadDirectory(currentPath);
+  });
+  
+  // Hide modal handler - show the Add Share modal again
+  document.getElementById('directoryBrowserModal').addEventListener('hidden.bs.modal', function() {
+    const addShareModal = new bootstrap.Modal(document.getElementById('addShareModal'));
+    addShareModal.show();
+  });
+});
+</script>
