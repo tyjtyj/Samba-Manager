@@ -2,7 +2,10 @@
 
 A comprehensive web-based interface for managing Samba file sharing on Linux systems.
 
-![Samba Manager](https://github.com/user-attachments/assets/42226894-8711-4779-91f4-ba145adcac67)
+![Samba Manager](image.png)
+
+![Terminal](image-5.png)
+
 
 ## Features
 
@@ -27,6 +30,12 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
 - **Log Viewing**: View Samba logs directly from the web interface
 - **Import/Export**: Backup and restore your Samba configuration
 - **Setup Wizard**: Easy initial configuration for new installations
+- **Security Features**:
+  - CSRF protection on all forms
+  - Rate limiting for login attempts
+  - Input validation and sanitization
+  - Secure password hashing
+  - No default credentials
 - **Multi-Mode Operation**:
   - Development mode for testing without system modifications
   - Production mode for actual system configuration management
@@ -38,10 +47,32 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
 - Samba server
 - Sudo access (for modifying system Samba configuration)
 - Go (for terminal feature using GoTTY)
+- Docker 20.10+ (for Docker deployment - optional)
 
-## Quick Installation (Recommended)
+## Installation Methods
 
-### Option 1: Authentication-enabled Installation (Recommended)
+### Docker Deployment (Recommended for Testing)
+
+Quickest way to try Samba Manager:
+
+#### Option A: Using Docker Compose (Local)
+```bash
+cd releases/docker
+docker-compose up
+```
+
+#### Option B: Using Docker Hub (Pre-built)
+```bash
+docker run -d -p 5000:5000 lyarinet/samba-manager:1.3.0
+```
+
+**Docker Hub**: https://hub.docker.com/r/lyarinet/samba-manager
+
+Access at: `http://localhost:5000`
+
+### Quick Installation (Recommended)
+
+#### Option 1: Authentication-enabled Installation (Recommended)
 
 If you're encountering authentication issues with GitHub, use this installation method:
 
@@ -56,13 +87,7 @@ chmod +x install_with_auth.sh
 sudo ./install_with_auth.sh
 ```
 
-This script will:
-- Prompt you for GitHub credentials if needed
-- Try multiple repository names
-- Allow you to enter a custom repository URL if needed
-- Handle all installation steps automatically
-
-### Option 2: One-line Installation
+#### Option 2: One-line Installation
 
 If you have direct access to the repository, install Samba Manager with a single command:
 
@@ -85,9 +110,9 @@ That's it! The script will automatically:
 
 After installation, access Samba Manager at: `http://your-server-ip:5000`
 
-## Manual Installation Options
+### Manual Installation Options
 
-### Option 1: Download and Review the Script First
+#### Option 3: Download and Review the Script First
 
 If you prefer to review the installation script before running it:
 
@@ -106,7 +131,7 @@ If you prefer to review the installation script before running it:
    sudo ./auto_install.sh
    ```
 
-### Option 2: Distribution-Specific Installation
+#### Option 4: Distribution-Specific Installation
 
 #### Ubuntu/Debian
 ```bash
@@ -150,7 +175,7 @@ cd Samba-Manager
 sudo ./install_all_distros.sh
 ```
 
-### Option 3: Developer Installation
+#### Option 5: Developer Installation
 
 For development or testing without system-wide installation:
 
@@ -169,6 +194,52 @@ pip install -r requirements.txt
 # Run in development mode
 python run.py --dev
 ```
+
+## Docker Deployment
+
+Samba Manager includes production-ready Docker support for easy containerized deployment:
+
+### Docker Features
+- **Pre-configured** - All dependencies included
+- **Production-ready** - Based on Python 3.12 Debian Bookworm
+- **Services included** - Samba Manager (5000) + Samba daemon (139, 445)
+- **Persistent storage** - Volumes for configuration and logs
+- **Auto-restart** - Process supervision with automatic restart
+- **Health checks** - Built-in monitoring and health endpoints
+
+### Quick Docker Start
+```bash
+cd releases/docker
+docker-compose up
+```
+
+For more details, see the [releases/docker/](releases/docker/) directory.
+
+## Release Management System
+
+Samba Manager includes a comprehensive release management system with automated tools:
+
+### Release Tools
+- **build_release.sh** - Create tar.gz and zip packages with SHA-256 checksums
+- **validate_release.sh** - Validate release integrity (15+ checks)
+- **publish_release.sh** - Publish to GitHub with automated uploads
+- **generate_changelog.sh** - Generate changelog from git commits
+
+### Building a Release
+```bash
+./build_release.sh    # Build packages
+./validate_release.sh # Verify integrity
+./publish_release.sh  # Publish to GitHub
+```
+
+### Release Documentation
+- **[START_HERE.md](START_HERE.md)** - Quick start guide
+- **[RELEASE_PACK.md](RELEASE_PACK.md)** - Quick reference commands
+- **[RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md)** - Complete guide (500+ lines)
+- **[RELEASE_PACK_OVERVIEW.md](RELEASE_PACK_OVERVIEW.md)** - Comprehensive overview
+- **[releases/README.md](releases/README.md)** - Distribution guide
+
+For complete release details, see [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
 ## Uninstalling Samba Manager
 
@@ -199,11 +270,32 @@ Note: The uninstall script will NOT remove Samba itself or your Samba configurat
 ### Access the Web Interface
 Open your browser and navigate to: `http://your-server-ip:5000`
 
-### Default Login Credentials
-- Username: `admin`
-- Password: `admin`
+### First-Time Setup
 
-**⚠️ IMPORTANT:** Change the default password immediately after your first login!
+**No default credentials are provided for security reasons.**
+
+1. **Access the Web Interface**: Open your browser and navigate to: `http://your-server-ip:5000`
+
+2. **First-Time Registration**: 
+   - You'll be redirected to the login page
+   - Click on "Register" or navigate to `/register`
+   - Create your first admin user account
+   - Check the "Admin" checkbox to grant administrator privileges
+   - The first user created will automatically become the system administrator
+
+3. **Login**: Use your newly created credentials to log in
+
+4. **Secure Your Account**: 
+   - Change your password regularly
+   - Use strong, unique passwords
+   - Consider enabling additional security measures
+
+### User Management
+
+- **Admin Users**: Can create, modify, and delete other users
+- **Regular Users**: Can access shares based on permissions set by administrators
+- **User Registration**: Only administrators can create new user accounts after the initial setup
+- **Password Management**: Administrators can reset user passwords
 
 ### Managing the Service
 ```bash
@@ -245,9 +337,9 @@ After running this script, you should be able to access Samba Manager from any c
 
 ## Setup Guide
 
-1. **First Login**: Log in with the default credentials and change your password
+1. **First-Time Setup**: Access the web interface and create your first admin user account
 2. **Global Settings**: Configure your workgroup, security settings, and other global parameters
-3. **Add Users**: Create Samba users that will access your shares
+3. **Add Users**: Create additional Samba users that will access your shares (admin users can create accounts)
 4. **Create Shares**: Set up the directories you want to share
 5. **Configure Permissions**: Set appropriate permissions for each share
 6. **Restart Service**: Apply changes by restarting the Samba service
@@ -278,12 +370,17 @@ For detailed documentation on the terminal feature, please refer to [TERMINAL.md
 
 ## Security Considerations
 
-- **Change Default Password**: Immediately change the default admin password
+- **No Default Credentials**: The application starts with no pre-configured users for enhanced security
+- **First-Time Setup**: Secure initial administrator account creation process
+- **Strong Passwords**: Use complex passwords and change them regularly
 - **Network Security**: Restrict access to the web interface using a firewall
 - **Sudo Access**: The application requires sudo access to modify system configuration files
 - **Custom Sudo Rules**: Consider setting up specific sudo rules for production environments
 - **HTTPS**: For production use, configure a proper HTTPS setup using a reverse proxy
 - **Terminal Security**: The terminal feature provides full system access - restrict application access accordingly
+- **CSRF Protection**: All forms are protected against Cross-Site Request Forgery attacks
+- **Rate Limiting**: Login attempts are rate-limited to prevent brute force attacks
+- **Input Validation**: All user inputs are validated to prevent command injection attacks
 
 ## Troubleshooting
 
@@ -295,6 +392,7 @@ If you encounter issues during installation or usage:
 4. **Network Access**: Verify network connectivity and firewall settings
 5. **Terminal Issues**: If the terminal doesn't appear, check that GoTTY is installed and running on port 8080
 6. **See the Troubleshooting Guide**: Refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
+7. **Release Build Issues**: For release management help, see [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md#troubleshooting)
 
 ## Advanced Configuration
 
@@ -304,9 +402,26 @@ If you encounter issues during installation or usage:
 - **User Management**: Create specific users for Samba access
 - **Terminal Configuration**: Customize terminal settings in `~/.gotty/config.toml`
 
+## Documentation
+
+### Setup & Installation
+- [INSTALL.md](INSTALL.md) - Detailed installation for all distributions
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues and solutions
+- [TERMINAL.md](TERMINAL.md) - Terminal feature guide
+
+### Release Management
+- [START_HERE.md](START_HERE.md) - Release pack quick start
+- [RELEASE_PACK.md](RELEASE_PACK.md) - Release commands reference
+- [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md) - Complete release process
+- [RELEASE_PACK_OVERVIEW.md](RELEASE_PACK_OVERVIEW.md) - Full release documentation
+- [releases/README.md](releases/README.md) - Distribution guide
+
+### Deployment
+- [releases/docker/](releases/docker/) - Docker deployment guide
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
@@ -320,6 +435,7 @@ Developed by AsifAgaria by Lyarinet.
 
 ## Screenshots
 
-![Dashboard](https://github.com/user-attachments/assets/61670b6f-0d9b-445e-a74e-c57c58342c54)
-![Shares Management](https://github.com/user-attachments/assets/93449c01-fb18-4adf-ae1a-2453c3b130aa)
-![Global Settings](https://github.com/user-attachments/assets/a8c39754-6574-40e5-8c4f-ad0ed3542265)
+
+![Maintenance](image-3.png)
+![Shares Management](image-2.png)
+![Global Settings](image-1.png)
